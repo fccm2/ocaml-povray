@@ -1,0 +1,14 @@
+I tryed to make a small tutorial for this interface, with
+the file:
+ - tutorial/pov-tut.html
+
+The (un-finished) Shapes module in the directory "utils/"
+tries to provide some geometric shapes, like:
+ - octahedron, tetrahedron, pyramids, and icosahedron
+
+Files from the tests/ directory try to check that functions
+from src/ are working correctly.
+
+Files from test2/ are trying to check that the Shapes module
+works correctly.
+

@@ -1,0 +1,239 @@
+<html>
+<head>
+<title>ocaml/povray tutorial</title>
+<style>
+body { background:#112; color:#eee; }
+code { background:#334; color:#ff2; }
+pre { background:#445; color:#ff2; border:1px #112 solid; padding:1px; }
+div#main {
+  width:68%;
+  padding:0.1em 2.8em 1.2em 0.6em;
+  margin-bottom:1.2em;
+  border:1px #001 solid;
+  background:#223;
+}
+h1 { font-size:1.6em; margin-top:0.2em; }
+a { color:#4f2; }
+p.small { font-size:0.8em; color:#aaa; }
+</style>
+</head>
+<body>
+<div id="main">
+
+<h1>ocaml/povray tutorial</h1>
+
+<p>Beginning with povray and with the ocaml programming language.</p>
+<p>First download and compile
+<a href="http://decapode314.free.fr/ocaml/povray2/">pov-bind</a>.
+This is an ocaml interface for povray.</p>
+<p>Check that ocaml and povray are correctly installed.</p>
+<p>This tutorial should be compatible with "pov-bind" versions
+"0.11" or "0.12".</p>
+
+<p>(But if you want to start more easily, you should probably take version "0.02",
+which is probably easier to use.)</p>
+
+<p>Start a new script with the file-extension '.ml'.</p>
+<p>You can start by defining a shorter alias for the main module "Povray"
+(at the beginning of the file):</p>
+
+<pre>
+module Pov = Povray
+</pre>
+
+<p>You can then define a color for the background:</p>
+
+<pre>
+let bg_color = PovColor.RGB(0.2, 0.1, 0.4)
+</pre>
+
+<p>Create a new empty-scene with the function
+<code>Pov.new_scene</code>:</p>
+
+<pre>
+let () =
+  let sc = Pov.new_scene () in
+  let sc = Pov.add_background sc ~color:bg_color in
+  let sc = Pov.add_camera sc ~location:cam_loc ~look_at in
+
+  Pov.print_scene sc;
+;;
+</pre>
+
+<p>You can then add a background with the background-color "bg_color",
+and a camera with the camera-location and where it should look at:</p>
+
+<pre>
+let cam_loc = (1.8, 4.8, 2.4)
+let look_at = (0.0, 0.6, 0.0)
+</pre>
+
+<p>These 2 vars should be defined before to be used, this is why you
+should place these 2 definitions before the call to the function
+"Pov.add_camera".</p>
+
+<p>The complete script should then look like this:</p>
+
+<pre>
+module Pov = Povray
+module PovColor = Pov.Color
+
+let bg_color = PovColor.RGB(0.2, 0.1, 0.4)
+
+let cam_loc = (1.8, 4.8, 2.4)
+let look_at = (0.0, 0.6, 0.0)
+
+let () =
+  let sc = Pov.new_scene () in
+  let sc = Pov.add_background sc ~color:bg_color in
+  let sc = Pov.add_camera sc ~location:cam_loc ~look_at in
+
+  (* shapes can be added here *)
+
+  Pov.print_scene sc;
+;;
+</pre>
+
+<p>If this script is in a file called "scene1.ml", you should be able
+to create the <code>*.pov</code> file "scene1.pov" like this:</p>
+
+<pre>
+ocaml -I ../src povray.cma scene1.ml &gt; scene1.pov
+</pre>
+
+<p>Replace <code>../src</code> by a path where to find the file
+<code>povray.cma</code>.</p>
+
+<p>This command should produce the file
+<a href="./scene1.pov" class="code">scene1.pov</a>.</p>
+
+<pre>
+povray +W360 +H220 -V +A +Iscene1.pov
+</pre>
+
+<p>This command should produce the file <code>"scene1.png"</code>:</p>
+
+<img width="360" height="220" src="./scene1.png" />
+
+<p>The scene looks empty with only the background color, because it doesn't contain any shape yet.</p>
+
+<p>We can add a light-source and a sphere:</p>
+
+<pre>
+module Pov = Povray
+module PovColor = Pov.Color
+
+let bg_color = PovColor.RGB(0.2, 0.2, 0.8)
+let light_color = PovColor.RGB(1.0, 1.0, 1.0)
+
+let cam_loc = (1.8, 4.8, 2.4)
+let look_at = (0.0, 0.6, 0.0)
+
+let () =
+  let sc = Pov.new_scene () in
+  let sc = Pov.add_background sc ~color:bg_color in
+  let sc = Pov.add_camera sc ~location:cam_loc ~look_at () in
+
+  let sc = Pov.add_light_source sc ~location:(6.0, 16.0,  4.0) ~color:light_color in
+
+  let color1 = PovColor.RGB(0.2, 1.0, 0.4) in
+  let texture = Pov.new_texture ~color:color1 () in
+
+  let sc =
+    Pov.add_sphere sc
+       ~center:(0.0, 0.2, 0.0)
+       ~radius:1.6
+       ~texture () in
+
+  Pov.print_scene sc;
+;;
+</pre>
+
+<p>The second .pov file
+<a href="./scene2.pov" class="code">scene2.pov</a> will produce this image:</p>
+
+<img width="360" height="220" src="./scene2.png" />
+
+<p>In the next script, we add an "ambient-light" and a "plane" to represent the ground,
+so that the sphere doens't look like to fly. We apply a "blue-checker" with 2 colors
+on the plane. With this new script
+<a href="./scene3.ml" class="code">scene3.ml</a>, we get the .pov file
+<a href="./scene3.pov" class="code">scene3.pov</a> which gives the image:</p>
+
+<img width="360" height="220" src="./scene3.png" />
+
+<pre>
+
+  (* ambient-light *)
+  let sc = Pov.add_ambient_light sc ~color:(0.2, 0.1, 0.8) in
+
+  (* blue-checker *)
+  let texture =
+    let color1 = PovColor.RGB(0.10, 0.30, 0.80) in
+    let color2 = PovColor.RGB(0.12, 0.34, 0.86) in
+    Pov.new_checker ~color1 ~color2 ()
+  in
+  let sc = Pov.add_plane sc ~norm:(0, 1, 0) ~dist:(0) ~texture () in
+
+</pre>
+
+<p>We can also draw cylinders, boxes, cones and torus shapes, with predefined functions.</p>
+
+<p>Custom shapes can also be defined with triangles.</p>
+
+<p>This is possible to define triangles like this way:</p>
+<pre>
+let triangles =
+  [
+    ( (-0.2, 0.0,  0.2), (0.0, 1.4, 0.0), ( 0.2, 0.0,  0.2) );
+    ( ( 0.2, 0.0,  0.2), (0.0, 1.4, 0.0), ( 0.2, 0.0, -0.2) );
+    ( ( 0.2, 0.0, -0.2), (0.0, 1.4, 0.0), (-0.2, 0.0, -0.2) );
+    ( (-0.2, 0.0, -0.2), (0.0, 1.4, 0.0), (-0.2, 0.0,  0.2) );
+  ]
+</pre>
+
+<p>Every triangle is defined with three vertices. A vertex is defined with
+x, y, and z coordinantes <code>(x, y, z)</code>.</p>
+
+<p>The set of coordinates above creates a pyramid shape.</p>
+
+<p>Here <code>(0.0, 1.4, 0.0)</code> is the top of the "pyramid".</p>
+
+<p>We need 4 triangles to define this "pyramid".</p>
+
+<img width="360" height="220" src="./scene4.png" />
+
+<p>The mesh created with these coordinates can be added to the "scene" with the function:</p>
+
+<pre>
+  PovMesh.add_mesh sc ~triangles ~texture ~translate ~rotate ()
+</pre>
+
+<p>The coordinates can be used several times to create several meshes, with different locations,
+that can be defined with the <code>~translate</code> parameter.</p>
+
+<img width="360" height="260" src="./sq.png" />
+
+<p>You can find the documentation of the api of the version "0.11" here:</p>
+<p>
+<ul>
+<li><a href="http://decapode314.free.fr/ocaml/povray2/docs/0.11/">Povray module v-0.11</a></li>
+</ul>
+</p>
+
+<p>For the documentation of the version "0.02", which is probably easier to use for beginning:</p>
+<p>
+<ul>
+<li><a href="http://decapode314.free.fr/ocaml/povray2/docs/0.02/">Povray module v-0.02</a></li>
+</ul>
+</p>
+
+<p>Here are some images that I made with it:</p>
+<p><img width="340" height="220" src="http://decapode314.free.fr/ocaml/povray2/examples/0.07/scene_E/scene_E.png" /></p>
+<p><img width="340" height="220" src="http://decapode314.free.fr/ocaml/povray2/examples/0.07/scene_G/scene_G3a.png" /></p>
+<p><img width="340" height="220" src="http://decapode314.free.fr/ocaml/povray2/examples/0.09/scene_Hd.png" /></p>
+
+</div>
+<p class="small">You can read, improve, and redistribute this tutorial.</p>
+</body>
+</html>

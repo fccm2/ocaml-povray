@@ -1,0 +1,8 @@
+_*
+*.cmi
+*.cmo
+*.cma
+*.cmx
+*.cmxa
+examples/*.pov
+examples/*.png
